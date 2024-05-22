@@ -70,8 +70,6 @@ object C_feature {
 
 
 
-
-
     spark.stop()
   }
 }
