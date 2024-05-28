@@ -13,7 +13,9 @@ object store_1_feature {
     Logger.getLogger("org").setLevel(Level.OFF)
 
     val spark = SparkSession.builder().appName("电商1 特征工程")
-      .master("local[*]").getOrCreate()
+      .master("local[*]").enableHiveSupport()
+      .config("hive.metastore.uris","thrift://bigdata1:9083")
+      .config("hive.exec.dynamic.partition.mode","nonstrict").getOrCreate()
 
     import spark.implicits._
 
@@ -130,6 +132,8 @@ object store_1_feature {
       .withColumn("weight_sca", expr("train_sca(weight_sca)"))
 
     feature_2_res.show(5)
+
+    feature_2_res.write.format("hive").mode("overwrite").saveAsTable("dws.store_1_feature_res")
 
     println("---------------第一行前5列结果展示为---------------")
     feature_2_res

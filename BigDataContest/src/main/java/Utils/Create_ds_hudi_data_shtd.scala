@@ -60,22 +60,22 @@ object Create_ds_hudi_data_shtd {
 
     HoodieUtils.write(hudi_ods_user_info,"etl_date","id","operate_time","user_info","ods_ds_hudi","/user/hive/warehouse/ods_ds_hudi.db/user_info",SaveMode.Overwrite)
     HoodieUtils.write(hudi_ods_sku_info,"etl_date","id","create_time","sku_info","ods_ds_hudi","/user/hive/warehouse/ods_ds_hudi.db/sku_info",SaveMode.Overwrite)
-    HoodieUtils.write(hudi_ods_order_info,"etl_date","id","operate_time","order_info","ods_ds_hudi","/user/hive/warehouse/ods_ds_hudi.db/order_info",SaveMode.Overwrite)
-    HoodieUtils.write(hudi_ods_order_detail,"etl_date","id","create_time","order_detail","ods_ds_hudi","/user/hive/warehouse/ods_ds_hudi.db/order_detail",SaveMode.Overwrite)
+//    HoodieUtils.write(hudi_ods_order_info,"etl_date","id","operate_time","order_info","ods_ds_hudi","/user/hive/warehouse/ods_ds_hudi.db/order_info",SaveMode.Overwrite)
+//    HoodieUtils.write(hudi_ods_order_detail,"etl_date","id","create_time","order_detail","ods_ds_hudi","/user/hive/warehouse/ods_ds_hudi.db/order_detail",SaveMode.Overwrite)
     HoodieUtils.write(hudi_dim_user_info,"etl_date","id","operate_time","dim_user_info","dwd_ds_hudi","/user/hive/warehouse/dwd_ds_hudi.db/dim_user_info",SaveMode.Overwrite)
     HoodieUtils.write(hudi_dim_sku_info,"etl_date","id","dwd_modify_time","dim_sku_info","dwd_ds_hudi","/user/hive/warehouse/dwd_ds_hudi.db/dim_sku_info",SaveMode.Overwrite)
 
     Repair_table.repair_table(spark,"ods_ds_hudi","user_info","/user/hive/warehouse/ods_ds_hudi.db/user_info")
     Repair_table.repair_table(spark,"ods_ds_hudi","sku_info","/user/hive/warehouse/ods_ds_hudi.db/sku_info")
-    Repair_table.repair_table(spark,"ods_ds_hudi","order_info","/user/hive/warehouse/ods_ds_hudi.db/order_info")
-    Repair_table.repair_table(spark,"ods_ds_hudi","order_detail","/user/hive/warehouse/ods_ds_hudi.db/order_detail")
+//    Repair_table.repair_table(spark,"ods_ds_hudi","order_info","/user/hive/warehouse/ods_ds_hudi.db/order_info")
+//    Repair_table.repair_table(spark,"ods_ds_hudi","order_detail","/user/hive/warehouse/ods_ds_hudi.db/order_detail")
     Repair_table.repair_table(spark,"dwd_ds_hudi","dim_user_info","/user/hive/warehouse/dwd_ds_hudi.db/dim_user_info")
     Repair_table.repair_table(spark,"dwd_ds_hudi","dim_sku_info","/user/hive/warehouse/dwd_ds_hudi.db/dim_sku_info")
 
     Repair_table.show_partition(spark,"ods_ds_hudi","user_info")
     Repair_table.show_partition(spark,"ods_ds_hudi","sku_info")
-    Repair_table.show_partition(spark,"ods_ds_hudi","order_info")
-    Repair_table.show_partition(spark,"ods_ds_hudi","order_detail")
+//    Repair_table.show_partition(spark,"ods_ds_hudi","order_info")
+//    Repair_table.show_partition(spark,"ods_ds_hudi","order_detail")
     Repair_table.show_partition(spark,"dwd_ds_hudi","dim_user_info")
     Repair_table.show_partition(spark,"dwd_ds_hudi","dim_sku_info")
   }

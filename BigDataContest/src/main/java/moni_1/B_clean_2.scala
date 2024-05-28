@@ -49,6 +49,7 @@ object B_clean_2 {
       .option("hoodie.datasource.write.hive_style_partitioning", "true")
       .save("hdfs://bigdata1:9000/user/hive/warehouse/dwd_ds_hudi.db/dim_sku_info")
 
+//    spark.sql("create table dwd_ds_hudi.dim_sku_info using hudi location 'hdfs://bigdata1:9000/user/hive/warehouse/dwd_ds_hudi.db/dim_sku_info'")
     spark.sql("msck repair table dwd_ds_hudi.dim_sku_info")
     spark.sql("show partitions dwd_ds_hudi.dim_sku_info").show()
     spark.sql("select id,sku_desc,dwd_insert_user,dwd_modify_time,etl_date from dwd_ds_hudi.dim_sku_info where etl_date = 20240521 and id >= 15 and id <= 20 order by id asc").show()

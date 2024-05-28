@@ -47,6 +47,7 @@ object B_clean_1 {
       .option("hoodie.datasource.write.hive_style_partitioning","true")
       .save("hdfs://bigdata1:9000/user/hive/warehouse/dwd_ds_hudi.db/dim_user_info")
 
+//    spark.sql("create table dwd_ds_hudi.dim_user_info using hudi location 'hdfs://bigdata1:9000/user/hive/warehouse/dwd_ds_hudi.db/dim_user_info'")
     spark.sql("msck repair table dwd_ds_hudi.dim_user_info")
     spark.sql("show partitions dwd_ds_hudi.dim_user_info").show()
 

@@ -14,7 +14,11 @@ object store_2_feature {
     Logger.getLogger("org").setLevel(Level.OFF)
 
     val spark = SparkSession.builder().appName("电商2 特征工程")
-      .master("local[*]").getOrCreate()
+      .master("local[*]")
+      .enableHiveSupport()
+      .config("hive.metastore.uris","thrift://bigdata1:9083")
+      .config("hive.exec.dynamic.partition.mode","nonstrict")
+      .getOrCreate()
 
     import spark.implicits._
 
@@ -72,6 +76,9 @@ object store_2_feature {
       .orderBy("user_id")
 
     feature2_res.show(5)
+
+    spark.sql("create database dws")
+    feature2_res.write.format("hive").mode("overwrite").saveAsTable("dws.store_2_feature_res")
 
     println("---------------第一行前5列结果展示为---------------")
     feature2_res.orderBy(asc("user_id")).limit(1)

@@ -1,27 +1,26 @@
-package Mode_c
+package Mode_c.Moxie_0526
 
-import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.feature.{OneHotEncoder, StandardScaler, VectorAssembler}
-import org.apache.spark.ml.linalg.{DenseVector, SparseVector}
+import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.expressions.Window
-import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.DoubleType
-import org.dom4j.{Document, DocumentHelper}
+import org.dom4j.DocumentHelper
 
+import java.sql
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
-object industry_feature {
+
+object industry_1 {
   def main(args: Array[String]): Unit = {
+    System.setProperty("HADOOP_USER_NAME", "root")
+    Logger.getLogger("org").setLevel(Level.OFF)
 
-    val spark = SparkSession.builder().appName("工业 特征工程")
-      .master("local[*]").getOrCreate()
+    val spark = SparkSession.builder().appName("moxie3")
+      .master("local[*]")
+      .config("hive.metastore.uris", "thrift://bigdata1:3306")
+      .config("hive.exec.dynamic.partition,mode", "nonstrict")
+      .getOrCreate()
 
-
-    import spark.implicits._
     val MachineData = spark.read.format("jdbc")
       .option("url", "jdbc:mysql://bigdata1:3306/shtd_industry?useSSL=false")
-      .option("driver", "com.mysql.jdbc.Driver")
       .option("user", "root")
       .option("password", "123456")
       .option("dbtable", "MachineData")
@@ -29,24 +28,23 @@ object industry_feature {
 
     MachineData.show(5)
 
-    val result_df = MachineData.map(r => {
+    import spark.implicits._
+    val res_3 = MachineData.map(r => {
       val machine = new machine()
       machine.machine_record_id = r(0).toString.toInt
-      machine.machine_id = r(1).toString.toInt
-      machine.machine_record_state = 1.0
-      machine.machine_record_date = new Timestamp(System.currentTimeMillis())
+      machine.machine_id = r(1).toString.toDouble
+      machine.machine_record_state = if (r(2).equals("报警")) 1.0 else 0.0
+      machine.machine_record_date = new Timestamp(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss").parse(r(4).toString).getTime)
 
       if (r(3) != null) {
         val document = DocumentHelper.parseText(s"<rows>${r(3)}</rows>")
-
         val root = document.getRootElement
         val item = root.elementIterator()
 
         while (item.hasNext) {
           val element = item.next()
           val ColName = element.attributeValue("ColName")
-
-          if (!element.getTextTrim.equals("null") && element.getTextTrim.nonEmpty) {
+          if (!element.getTextTrim().equals("null") && element.getTextTrim().nonEmpty) {
             ColName match {
               case "主轴转速" => machine.machine_record_mainshaft_speed = element.getTextTrim.toDouble
               case "主轴倍率" => machine.machine_record_mainshaft_multiplerate = element.getTextTrim.toDouble
@@ -64,15 +62,19 @@ object industry_feature {
               case "注册程序量" => machine.machine_record_amount_free_code = element.getTextTrim.toDouble
               case _ => ""
             }
+
           }
         }
+
       }
 
       machine
     })
 
-    result_df.show(5)
+    res_3.orderBy("machine_record_id").limit(1).show()
 
+
+    spark.stop()
   }
 
   case class machine(
@@ -96,7 +98,7 @@ object industry_feature {
                       var machine_record_date: Timestamp = null,
                       var dwd_insert_user: String = "user1",
                       var dwd_insert_time: Timestamp = new Timestamp(System.currentTimeMillis()),
-                      var dwd_modify_user: String = null,
+                      var dwd_modify_user: String = "user1",
                       var dwd_modify_time: Timestamp = new Timestamp(System.currentTimeMillis())
                     )
 }

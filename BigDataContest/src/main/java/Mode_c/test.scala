@@ -13,39 +13,30 @@ object test {
     Logger.getLogger("org").setLevel(Level.OFF)
 
     val spark = SparkSession.builder().appName("电商1 特征工程")
-      .master("local[*]").getOrCreate()
+      .master("local[*]").enableHiveSupport()
+      .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+      .config("spark.sql.legacy.avro.datetimeRebaseModeInWrite", "CORRECTED")
+      .config("spark.sql.legacy.parquet.datetimeRebaseModeInRead", "CORRECTED")
+      .config("hive.metastore.uris", "thrift://bigdata1:9083")
+      .config("hive.exec.dynamic.partition.mode", "nonstrict").getOrCreate()
 
     import spark.implicits._
 
-    // todo 1
-    val order_info = spark.read.format("jdbc")
-      .option("url", "jdbc:mysql://bigdata1:3306/shtd_store?useSSL=false")
-      .option("driver", "com.mysql.jdbc.Driver")
-      .option("user", "root")
-      .option("password", "123456")
-      .option("dbtable", "order_info")
-      .load()
+    val tables = Array("user_info", "sku_info", "base_province", "base_region", "order_info", "order_detail")
 
-    val order_detail = spark.read.format("jdbc")
-      .option("url","jdbc:mysql://bigdata1:3306/shtd_store?useSSL=false")
-      .option("driver","com.mysql.jdbc.Driver")
-      .option("user","root")
-      .option("password","123456")
-      .option("dbtable","order_detail")
-      .load()
+    tables.foreach(r =>{
+      spark.sql(s"create table ods_ds_hudi.${r} using hudi location 'hdfs://bigdata1:9000/user/hive/warehouse/ods_ds_hudi.db/${r}'")
+      spark.sql(s"msck repair table ods_ds_hudi.${r}")
+      spark.sql(s"show partitions ods_ds_hudi.${r}").show()
+    })
 
-    val sku_info = spark.read.format("jdbc")
-      .option("url","jdbc:mysql://bigdata1:3306/shtd_store?useSSL=false")
-      .option("driver","com.mysql.jdbc.Driver")
-      .option("user","root")
-      .option("password","123456")
-      .option("dbtable","sku_info")
-      .load()
+    val tables_2 = Array("dim_user_info", "dim_sku_info", "dim_province", "dim_region")
 
-    order_detail.show()
-    sku_info.show()
+    tables_2.foreach(r =>{
+      spark.sql(s"create table dwd_ds_hudi.${r} using hudi location 'hdfs://bigdata1:9000/user/hive/warehouse/dwd_ds_hudi.db/${r}'")
+      spark.sql(s"msck repair table dwd_ds_hudi.${r}")
+      spark.sql(s"show partitions dwd_ds_hudi.${r}").show()
+    })
 
-    val all_user_sku = order_detail.join(order_info,order_info("id") === order_detail("order_id"))
-      .select(order_info("user_id"),order_detail("sku_id"))
   }
 }

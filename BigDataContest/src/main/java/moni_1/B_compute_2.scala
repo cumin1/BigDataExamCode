@@ -22,75 +22,70 @@ object B_compute_2 {
       .getOrCreate()
 
     // 计算2020年销售量前10的商品
-    val fact_order_info = spark.read.format("hudi").load("hdfs://bigdata1:9000/user/hive/warehouse/dwd_ds_hudi.db/fact_order_info")
-      .withColumn("year",year(col("create_time")))
-      .select("id","final_total_amount","year")
 
     val fact_order_detail = spark.read.format("hudi").load("hdfs://bigdata1:9000/user/hive/warehouse/dwd_ds_hudi.db/fact_order_detail")
-      .select("order_id", "sku_id","sku_name","sku_num")
+      .select("order_id", "sku_id","sku_name","order_price","sku_num")
+      .withColumn("sku_num",col("sku_num").cast("int"))
 
-//    fact_order_info.show(5)
-//    fact_order_detail.show(5)
+//    val fact_order_detail = spark.read.format("jdbc")
+//      .option("url","jdbc:mysql://localhost:3306/test1?useSSL=false")
+//      .option("user","root")
+//      .option("password","123456")
+//      .option("driver","com.mysql.jdbc.Driver")
+//      .option("dbtable","order_detail")
+//      .load()
+//      .select("order_id", "sku_id","sku_name","order_price","sku_num")
+//      .withColumn("sku_num",col("sku_num").cast("int"))
 
-    val source = fact_order_info
-      .join(fact_order_detail, fact_order_info("id") === fact_order_detail("order_id"))
-      .select("id", "final_total_amount", "year", "order_id", "sku_id", "sku_name","sku_num")
-      .filter(col("year") === 2020)
-      .groupBy("sku_id","sku_name")
+
+    // 先计算总销量
+    val df1 = fact_order_detail.groupBy("sku_id", "sku_name")
       .agg(
-        sum("sku_num") as "sku_num",
-        sum("final_total_amount") as "final_total_amount"
+        count("sku_num") as "topquantity"
       )
+      .withColumn("tmp",lit("tmp"))
+      .withColumn("sequence",row_number().over(Window.partitionBy("tmp").orderBy(desc("topquantity"))))
+      .withColumnRenamed("sku_id","topquantityid")
+      .withColumnRenamed("sku_name","topquantityname")
+      .select("topquantityid","topquantityname","topquantity","sequence")
+      .orderBy("sequence")
+      .limit(10)
 
-    val frame1 = source
-      .withColumn("tmp", lit("tmp"))
-      .withColumn("sequence", row_number().over(Window.partitionBy("tmp").orderBy(desc("sku_num"))))
-      .drop("tmp")
-      .filter(col("sequence") <= 10)
-      .withColumnRenamed("sku_id", "topquantityid")
-      .withColumnRenamed("sku_name", "topquantityname")
-      .withColumnRenamed("sku_num","topquantity")
-      .select(
-        "topquantityid", "topquantityname", "topquantity", "sequence"
+//    df1.show(5)
+
+    // 再计算总销售额
+    val df2 = fact_order_detail
+      .withColumn("price", col("order_price") * col("sku_num"))
+      .groupBy("sku_id", "sku_name")
+      .agg(
+        sum("price") as "topprice"
       )
-
-
-    val frame2 = source
       .withColumn("tmp", lit("tmp"))
-      .withColumn("sequence", row_number().over(Window.partitionBy("tmp").orderBy(desc("final_total_amount"))))
-      .drop("tmp")
-      .filter(col("sequence") <= 10)
+      .withColumn("sequence", row_number().over(Window.partitionBy("tmp").orderBy(desc("topprice"))))
       .withColumnRenamed("sku_id", "toppriceid")
       .withColumnRenamed("sku_name", "toppricename")
-      .withColumnRenamed("final_total_amount", "topprice")
-      .select(
-        "toppriceid", "toppricename", "topprice", "sequence"
-      )
+      .select("toppriceid", "toppricename", "topprice", "sequence")
+      .orderBy("sequence")
+      .limit(10)
 
-    val result = frame1.join(frame2, Seq("sequence"))
-      .select(
-        col("topquantityid") as "topquantityid",
-        col("topquantityname") as "topquantityname",
-        col("topquantity") as "topquantity",
-        col("toppriceid") as "toppriceid",
-        col("toppricename") as "toppricename",
-        col("topprice") as "topprice",
-        frame1("sequence") as "sequence"
-      )
+//    df2.show(5)
 
-    result.show()
-    result.createTempView("topten")
-    spark.sql("select * from topten order by sequence asc limit 5").show()
+    val result = df1.join(df2, Seq("sequence"))
+      .select("topquantityid", "topquantityname", "topquantity", "toppriceid", "toppricename", "topprice", "sequence")
 
-    val properties = new Properties() {
-      {
-        setProperty("driver", "com.clickhouse.jdbc.ClickHouseDriver")
-        setProperty("user", "default")
-        setProperty("password", "123456")
-      }
-    }
+    result.createOrReplaceTempView("result")
+    spark.sql("select * from result order by sequence asc limit 5").show()
 
-    result.write.mode("append").jdbc("jdbc:clickhouse://bigdata1:8123/shtd_result?useSSL=false","topten",properties)
+
+//    val properties = new Properties() {
+//      {
+//        setProperty("driver", "com.clickhouse.jdbc.ClickHouseDriver")
+//        setProperty("user", "default")
+//        setProperty("password", "123456")
+//      }
+//    }
+
+//    result.write.mode("append").jdbc("jdbc:clickhouse://bigdata1:8123/shtd_result?useSSL=false","topten",properties)
     // select topquantityid, topquantity,toppriceid, topprice,sequence  from topten order by sequence asc limit 5;
     // create table topten (topquantityid int,topquantityname String,topquantity int,toppriceid String,toppricename String,topprice decimal(65,2),sequence int) engine=Memory;
 
