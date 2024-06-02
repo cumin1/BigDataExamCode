@@ -60,6 +60,7 @@ object compute_4 {
       )
       .withColumn("uuid",uuid())
       .select("uuid","user_id","user_name","total_amount","total_count","year","month","day")
+      .withColumn("total_amount",col("total_amount").cast("double"))
 
     result.createOrReplaceTempView("user_consumption_day_aggr")
     spark.sql(

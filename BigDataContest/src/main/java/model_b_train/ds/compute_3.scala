@@ -46,7 +46,8 @@ object compute_3 {
         count("amount") as "totalorder"
       )
 
-    val result = source.as("df1").join(source.as("df2"), col("df1.userid") === col("df2.userid") and datediff(col("df1.tmp_day"), col("df2.tmp_day")) === 1)
+    val result = source.as("df1")
+      .join(source.as("df2"), col("df1.userid") === col("df2.userid") and datediff(col("df1.tmp_day"), col("df2.tmp_day")) === 1)
       .withColumn("day", concat(date_format(col("df1.tmp_day"),"yyyyMMdd"), lit("_"), date_format(col("df2.tmp_day"),"yyyyMMdd")))
       .filter(col("df1.totalconsumption") < col("df2.totalconsumption"))
       .select(
