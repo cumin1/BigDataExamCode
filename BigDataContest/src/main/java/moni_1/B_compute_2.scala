@@ -74,7 +74,7 @@ object B_compute_2 {
       .select("topquantityid", "topquantityname", "topquantity", "toppriceid", "toppricename", "topprice", "sequence")
 
     result.createOrReplaceTempView("result")
-    spark.sql("select * from result order by sequence asc limit 5").show()
+    spark.sql("select topquantityid,topquantity,toppriceid,topprice,sequence from result order by sequence asc limit 5").show()
 
 
 //    val properties = new Properties() {

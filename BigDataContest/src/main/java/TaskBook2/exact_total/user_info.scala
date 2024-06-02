@@ -20,7 +20,7 @@ object user_info {
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .config("spark.sql.storeAssignmentPolicy", "LEGACY")
       .config("spark.sql.legacy.avro.datetimeRebaseModeInWrite", "CORRECTED")
-      .config("spark.sql.parquet.datetimeRebaseModeInRead", "CORRECTED")
+      .config("spark.sql.legacy.parquet.datetimeRebaseModeInRead", "CORRECTED")
       .config("hive.metastore.uris", "thrift://bigdata1:9083")
       .config("hive.exec.dynamic.partition.mode", "nonstrict")
       .getOrCreate()
