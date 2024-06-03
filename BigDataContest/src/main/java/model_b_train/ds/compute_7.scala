@@ -65,6 +65,7 @@ object compute_7 {
         |limit 5
         |""".stripMargin).show()
 
+//    result.write.format("hive").mode("overwrite").saveAsTable("dws.province_consumption_day_aggr")
 
   }
 }

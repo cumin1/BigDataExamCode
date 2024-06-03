@@ -37,7 +37,7 @@ object compute_8 {
       .drop("sequence", "year", "month")
 
     val frame1 = source.withColumn("provinceavgconsumption", col("total_amount") / col("total_count"))
-      .select("province_id", "provnce_name", "region_id", "region_name", "provinceavgconsumption")
+      .select("province_id", "province_name", "region_id", "region_name", "provinceavgconsumption")
 
     val frame2 = source.groupBy("region_id")
       .agg(
@@ -51,10 +51,10 @@ object compute_8 {
           .otherwise("相同")
       )
       .withColumnRenamed("province_id", "provinceid")
-      .withColumnRenamed("provnce_name", "provncename")
+      .withColumnRenamed("province_name", "provincename")
       .withColumnRenamed("region_id", "regionid")
       .withColumnRenamed("region_name", "regionname")
-      .select("provinceid", "provncename", "provinceavgconsumption", "regionid", "regionname", "regionavgconsumption", "comparison")
+      .select("provinceid", "provincename", "provinceavgconsumption", "regionid", "regionname", "regionavgconsumption", "comparison")
 
     result.createOrReplaceTempView("provinceavgcmpregion")
     spark.sql(

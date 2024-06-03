@@ -47,7 +47,6 @@ object B_exact_1 {
       .withColumn("etl_date", lit("20240521"))
 
 
-
     ods_user_info
       .write.format("hudi").mode("append")
       .option("hoodie.table.name","user_info")

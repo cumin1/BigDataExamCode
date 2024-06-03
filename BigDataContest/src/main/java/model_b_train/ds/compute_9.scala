@@ -5,6 +5,8 @@ import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 
+import java.util.Properties
+
 /*
 8、根据dws层表来计算每个地区2020年订单金额前3省份，
 依次存入MySQL数据库shtd_result的regiontopthree表中（表结构如下），
@@ -41,13 +43,13 @@ object compute_9 {
       .filter(col("sequence") <= 3)
       .withColumn("province_id_2", lead("province_id", 1).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
       .withColumn("province_id_3", lead("province_id", 2).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
-      .withColumn("province_name_2", lead("provnce_name", 1).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
-      .withColumn("province_name_3", lead("provnce_name", 2).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
+      .withColumn("province_name_2", lead("province_name", 1).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
+      .withColumn("province_name_3", lead("province_name", 2).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
       .withColumn("total_amount_2", lead("total_amount", 1).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
       .withColumn("total_amount_3", lead("total_amount", 2).over(Window.partitionBy("region_id").orderBy(desc("total_amount"))))
       .filter(col("sequence") === 1)
       .withColumn("provinceids", concat(col("province_id"), lit(","), col("province_id_2"), lit(","), col("province_id_3")))
-      .withColumn("provincenames", concat(col("provnce_name"), lit(","), col("province_name_2"), lit(","), col("province_name_3")))
+      .withColumn("provincenames", concat(col("province_name"), lit(","), col("province_name_2"), lit(","), col("province_name_3")))
       .withColumn("provinceamount", concat(col("total_amount"), lit(","), col("total_amount_2"), lit(","), col("total_amount_3")))
       .withColumnRenamed("region_id", "regionid")
       .withColumnRenamed("region_name", "regionname")
@@ -60,6 +62,16 @@ object compute_9 {
         |order by regionid asc
         |limit 5
         |""".stripMargin).show()
+
+    val properties = new Properties() {
+      {
+        setProperty("driver", "com.mysql.jdbc.Driver")
+        setProperty("user", "root")
+        setProperty("password", "123456")
+      }
+    }
+    val mysql_url = "jdbc:mysql://bigdata1:3306/shtd_result?useSSL=false"
+    result.write.mode("append").jdbc(mysql_url,"regiontopthree",properties)
 
   }
 }
