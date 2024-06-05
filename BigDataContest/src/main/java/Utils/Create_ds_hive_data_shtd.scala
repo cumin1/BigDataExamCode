@@ -35,39 +35,40 @@ object Create_ds_hive_data_shtd {
       df.show()
     })
 
-    ods_user_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.user_info")
-    ods_sku_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.sku_info")
-    spark.sql(
-      """
-        |create table if not exists ods.base_province(
-        |id bigint,
-        |name string,
-        |region_id string,
-        |area_code string,
-        |iso_code string,
-        |create_time datetime
-        |)
-        |partitioned by (etl_date string);
-        |""".stripMargin)
-
-    spark.sql(
-      """
-        |create table ods.base_region(
-        |id bigint,
-        |region_name string,
-        |create_time datetime
-        |)
-        |partitioned by (etl_date string);
-        |""".stripMargin)
-
-
-    ods_order_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.order_info")
-    ods_order_detail.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.order_detail")
+//    ods_user_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.user_info")
+//    ods_sku_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.sku_info")
+//    spark.sql(
+//      """
+//        |create table if not exists ods.base_province(
+//        |id bigint,
+//        |name string,
+//        |region_id string,
+//        |area_code string,
+//        |iso_code string,
+//        |create_time datetime
+//        |)
+//        |partitioned by (etl_date string);
+//        |""".stripMargin)
+//
+//    spark.sql(
+//      """
+//        |create table ods.base_region(
+//        |id bigint,
+//        |region_name string,
+//        |create_time datetime
+//        |)
+//        |partitioned by (etl_date string);
+//        |""".stripMargin)
 
 
-    dim_user_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("dwd.dim_user_info")
-    dim_sku_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("dwd.dim_sku_info ")
+//    ods_order_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.order_info")
+//    ods_order_detail.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("ods.order_detail")
 
+//
+//    dim_user_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("dwd.dim_user_info")
+//    dim_sku_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("dwd.dim_sku_info ")
+    fact_order_info.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("dwd.fact_order_info ")
+    fact_order_detail.write.format("hive").partitionBy("etl_date").mode("overwrite").saveAsTable("dwd.fact_order_detail ")
 
 
 

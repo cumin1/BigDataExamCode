@@ -15,7 +15,7 @@ object B_compute {
 
     val spark = SparkSession
       .builder()
-      .appName("任务书5 清洗")
+      .appName("任务书5 计算")
       .master("local[*]")
       .enableHiveSupport()
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
@@ -87,7 +87,7 @@ object B_compute {
     result1.createTempView("machine_running_median")
     spark.sql("select * from machine_running_median order by machine_factory desc,machine_id desc limit 5").show()
 
-    result1.write.jdbc(url,"machine_running_median",prop)
+//    result1.write.jdbc(url,"machine_running_median",prop)
 
     // todo (2)
     val source4 = fact_change_record
@@ -142,7 +142,7 @@ object B_compute {
     result2.createTempView("machine_running_compare")
     spark.sql("select * from machine_running_compare order by machine_factory desc limit 2").show()
 
-    result2.write.jdbc(url,"machine_running_compare",prop)
+//    result2.write.jdbc(url,"machine_running_compare",prop)
 
 
     // todo (3)
@@ -163,7 +163,7 @@ object B_compute {
     result3.createTempView("recent_state")
     spark.sql("select * from recent_state order by machine_id desc limit 5").show()
 
-    result3.write.jdbc(url,"recent_state",prop)
+//    result3.write.jdbc(url,"recent_state",prop)
 
   }
 }

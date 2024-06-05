@@ -109,16 +109,16 @@ object B_clean {
     fact_order_info.write.format("hive").mode("append").partitionBy("etl_date").saveAsTable("dwd.fact_order_info")
     fact_order_detail.write.format("hive").mode("append").partitionBy("etl_date").saveAsTable("dwd.fact_order_detail")
 
-    spark.sql("show partitions dwd.dim_user_info").show()
-    spark.sql(
-      """select id,sku_desc,dwd_insert_user,dwd_modify_time,etl_date
-        |from dwd.dim_sku_info
-        |where etl_date=20240602 and id >= 15 and id <= 20
-        |order by id asc
-        |""".stripMargin).show()
-
-    spark.sql("select count(*) from dwd.dim_province").show()
-    spark.sql("select count(*) from dwd.dim_region").show()
+//    spark.sql("show partitions dwd.dim_user_info").show()
+//    spark.sql(
+//      """select id,sku_desc,dwd_insert_user,dwd_modify_time,etl_date
+//        |from dwd.dim_sku_info
+//        |where etl_date=20240602 and id >= 15 and id <= 20
+//        |order by id asc
+//        |""".stripMargin).show()
+//
+//    spark.sql("select count(*) from dwd.dim_province").show()
+//    spark.sql("select count(*) from dwd.dim_region").show()
     spark.sql("show partitions dwd.fact_order_info").show()
     spark.sql("show partitions dwd.fact_order_detail").show()
 

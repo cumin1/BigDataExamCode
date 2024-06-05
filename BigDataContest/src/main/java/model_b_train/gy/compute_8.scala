@@ -2,35 +2,35 @@ package model_b_train.gy
 
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.expressions.Window
 import org.apache.spark.sql.functions._
 
-object compute_1 {
+object compute_8 {
   def main(args: Array[String]): Unit = {
     System.setProperty("HADOOP_USER_NAME","root")
     Logger.getLogger("org").setLevel(Level.OFF)
 
     val spark = SparkSession.builder().appName("指标计算训练")
-      .master("local[*]")
+      .master("local[*]").enableHiveSupport()
+      .config("hive.metastore.uris","thrift://bigdata1:9083")
+      .config("hive.exec.dynamic.partition.mode","nonstrict")
       .config("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
       .config("spark.sql.legacy.avro.datetimeRebaseModeInWrite", "CORRECTED")
       .config("spark.sql.legacy.parquet.datetimeRebaseModeInRead", "CORRECTED")
       .getOrCreate()
 
-    val data = spark.read.format("hudi")
-      .load("hdfs://bigdata1:9000/user/hive/warehouse/hudi_gy_dwd.db/fact_change_record")
-      .filter(col("ChangeEndTime").isNotNull)
-      .select("ChangeMachineID","ChangeRecordState","ChangeStartTime","ChangeEndTime")
+    val fact_record = spark.table("dwd.fact_change_record")
+      .filter(col("changeendtime").isNotNull)
+      .withColumn("time",unix_timestamp(col("changeendtime")) - unix_timestamp(col("changestarttime")))
+      .withColumn("year",year(col("changestarttime")))
+      .withColumn("month",month(col("changestarttime")))
+      .select("ChangeMachineID","ChangeRecordState","time","year","month")
 
-    val result = data
-      .withColumn("year", year(col("ChangeStartTime")))
-      .withColumn("month", month(col("ChangeStartTime")))
-      .withColumn("time", unix_timestamp(col("ChangeEndTime")) - unix_timestamp(col("ChangeStartTime")))
+
+    val result = fact_record.groupBy("year", "month", "ChangeMachineID", "ChangeRecordState")
+      .agg(sum("time") as "duration_time")
       .withColumnRenamed("ChangeMachineID", "machine_id")
       .withColumnRenamed("ChangeRecordState", "change_record_state")
-      .groupBy("machine_id", "change_record_state", "year", "month")
-      .agg(
-        sum("time") as "duration_time"
-      )
       .select("machine_id", "change_record_state", "duration_time", "year", "month")
 
     result.createOrReplaceTempView("machine_state_time")
@@ -41,6 +41,5 @@ object compute_1 {
         |limit 10
         |""".stripMargin).show()
 
-    spark.stop()
   }
 }
